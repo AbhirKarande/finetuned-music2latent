@@ -1,0 +1,10 @@
+numpy
+soundfile
+huggingface_hub
+torch>=2.5.0
+librosa
+torchaudio
+laion-clap
+scipy
+tensorboard
+resampy

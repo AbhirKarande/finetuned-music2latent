@@ -1,0 +1,32 @@
+graph TD
+    A[main in train.py] --> B[Trainer.__init__]
+    B --> C[Initialize Models]
+    B --> D[Initialize DataLoader]
+    
+    C --> E[UNet Model]
+    E --> F[Encoder]
+    E --> G[Decoder]
+    
+    D --> H[AudioDataset]
+    H --> I[Load WAV Files]
+    
+    B --> J[Trainer.train]
+    J --> K[Training Loop]
+    
+    K --> L[train_it]
+    L --> M[forward_pass_consistency]
+    M --> N[Model Forward Pass]
+    
+    L --> O[Calculate Loss]
+    O --> P[Backward Pass]
+    
+    K --> Q[Evaluation Steps]
+    Q --> R[calculate_fad]
+    Q --> S[test_model]
+    Q --> T[save_checkpoint]
+
+
+ToDos: 
+1. Modify models.py to use LSTM instead of averaging through time. We are dealing with data that has standardized lengths 30s/5s
+2. Modify data.py/training.py to load from our contrastive audio dataset. 
+3. Modify loss funciton in training.py for contrastive loss, switch out huber
