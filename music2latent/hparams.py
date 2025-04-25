@@ -100,6 +100,17 @@ class HParams:
     p_mean: float = -1.1                                                            # mean of lognormal noise schedule
     p_std: float = 2.0                                                              # standard deviation of lognormal noise schedule
 
+    # === NEW Hyperparameters for Contrastive Finetuning ===
+    pretrained_encoder_path: Optional[str] = None                                    # Path to pretrained encoder weights (part of a full checkpoint .pt file)
+    train_encoder_only: bool = True                                                  # Freeze all weights except the encoder
+    use_contrastive_finetuning: bool = True                                           # Enable contrastive loss calculation
+    contrastive_loss_weight: float = 1.0                                             # Weight for the contrastive loss term
+    contrastive_temperature: float = 0.1                                             # Temperature for the contrastive loss (InfoNCE)
+    validation_split_ratio: float = 0.2                                              # Fraction of the dataset to use for validation
+    hf_dataset_name: str = "ryanleeme17/free-music-archive-retrieval"                # Hugging Face dataset name
+    hf_dataset_split: str = "train"                                                  # Split to use from the Hugging Face dataset
+    # ======================================================
+
     def update(self, config_dict: dict):
         # make sure I can set each key as an attribute (e.g. I can call hparams.batch_size)
         for key, value in config_dict.items():
