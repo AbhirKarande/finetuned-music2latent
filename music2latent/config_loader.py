@@ -1,5 +1,5 @@
 import importlib.util
-from .hparams import hparams, HParams
+from hparams import hparams, HParams
 
 def load_config(config_path: str) -> HParams:
     """Loads a configuration from a Python file.

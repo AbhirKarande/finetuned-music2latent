@@ -2,12 +2,12 @@ import soundfile as sf
 import torch
 import numpy as np
 
-from .ema import ExponentialMovingAverage
-from .hparams import hparams
-from .hparams_inference import *
-from .utils import *
-from .models import *
-from .audio import *
+from ema import ExponentialMovingAverage
+from hparams import hparams
+from hparams_inference import *
+from utils import *
+from models import *
+from audio import *
 
 
 class EncoderDecoder:

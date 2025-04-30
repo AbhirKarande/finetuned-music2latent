@@ -1,5 +1,5 @@
-from .fad import FrechetAudioDistance
-from .hparams import hparams
+from fad import FrechetAudioDistance
+from hparams import hparams
 
 def compute_fad(fad_path):
     scores = []

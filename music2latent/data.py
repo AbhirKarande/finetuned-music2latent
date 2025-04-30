@@ -8,8 +8,8 @@ from tqdm import tqdm
 from datasets import load_dataset, Dataset as HFDataset # Rename to avoid conflict
 import numpy as np
 
-from .hparams import hparams
-from .contrastive_audio_dataset import ContrastiveAudioDataset # Import contrastive dataset
+from hparams import hparams
+from contrastive_audio_dataset import ContrastiveAudioDataset # Import contrastive dataset
 
 from torch.utils.data.distributed import DistributedSampler
 

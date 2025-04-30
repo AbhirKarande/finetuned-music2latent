@@ -1,0 +1,71 @@
+==========================================
+SLURM_JOB_ID = 268713
+SLURM_JOB_NODELIST = d13-03
+TMPDIR = /tmp/SLURM_268713
+==========================================
+Lmod has detected the following error: The following module(s) are unknown:
+"gcc/11.3"
+
+Please check the spelling or version number. Also try "module spider ..."
+It is also possible your cache file is out-of-date; it may help to try:
+  $ module --ignore_cache load "gcc/11.3"
+
+Also make sure that all modulefiles written in TCL start with the string
+#%Module
+
+
+
+Setting up contrastive dataloaders...
+Loading dataset: ryanleeme17/free-music-archive-retrieval, split: train
+Downloading data:   0%|          | 0/71 [00:00<?, ?files/s]Downloading data:   1%|▏         | 1/71 [00:00<00:13,  5.20files/s]Downloading data:   4%|▍         | 3/71 [00:00<00:08,  8.13files/s]Downloading data:   7%|▋         | 5/71 [00:00<00:07,  9.12files/s]Downloading data:  10%|▉         | 7/71 [00:00<00:06,  9.56files/s]Downloading data:  11%|█▏        | 8/71 [00:00<00:06,  9.64files/s]Downloading data:  14%|█▍        | 10/71 [00:01<00:06,  9.96files/s]Downloading data:  15%|█▌        | 11/71 [00:01<00:06,  9.95files/s]Downloading data:  17%|█▋        | 12/71 [00:01<00:06,  9.23files/s]Downloading data:  20%|█▉        | 14/71 [00:01<00:06,  9.47files/s]Downloading data:  21%|██        | 15/71 [00:01<00:05,  9.56files/s]Downloading data:  24%|██▍       | 17/71 [00:01<00:05,  9.88files/s]Downloading data:  27%|██▋       | 19/71 [00:01<00:05, 10.06files/s]Downloading data:  28%|██▊       | 20/71 [00:02<00:08,  5.88files/s]Downloading data:  30%|██▉       | 21/71 [00:02<00:07,  6.41files/s]Downloading data:  32%|███▏      | 23/71 [00:02<00:06,  7.61files/s]Downloading data:  35%|███▌      | 25/71 [00:03<00:06,  6.91files/s]Downloading data:  38%|███▊      | 27/71 [00:03<00:06,  7.27files/s]Downloading data:  41%|████      | 29/71 [00:03<00:05,  7.94files/s]Downloading data:  42%|████▏     | 30/71 [00:03<00:05,  7.38files/s]Downloading data:  45%|████▌     | 32/71 [00:03<00:04,  8.22files/s]Downloading data:  46%|████▋     | 33/71 [00:03<00:04,  8.43files/s]Downloading data:  49%|████▉     | 35/71 [00:04<00:03,  9.08files/s]Downloading data:  52%|█████▏    | 37/71 [00:04<00:03,  9.47files/s]Downloading data:  55%|█████▍    | 39/71 [00:04<00:03,  9.34files/s]Downloading data:  58%|█████▊    | 41/71 [00:04<00:03,  9.57files/s]Downloading data:  59%|█████▉    | 42/71 [00:04<00:03,  9.65files/s]Downloading data:  62%|██████▏   | 44/71 [00:05<00:02,  9.94files/s]Downloading data:  65%|██████▍   | 46/71 [00:05<00:02,  9.91files/s]Downloading data:  68%|██████▊   | 48/71 [00:05<00:02, 10.13files/s]Downloading data:  70%|███████   | 50/71 [00:06<00:03,  6.15files/s]Downloading data:  73%|███████▎  | 52/71 [00:06<00:02,  7.06files/s]Downloading data:  76%|███████▌  | 54/71 [00:06<00:02,  7.81files/s]Downloading data:  79%|███████▉  | 56/71 [00:06<00:01,  8.00files/s]Downloading data:  82%|████████▏ | 58/71 [00:06<00:01,  8.56files/s]Downloading data:  83%|████████▎ | 59/71 [00:07<00:01,  7.68files/s]Downloading data:  85%|████████▍ | 60/71 [00:07<00:01,  7.85files/s]Downloading data:  86%|████████▌ | 61/71 [00:07<00:01,  8.24files/s]Downloading data:  87%|████████▋ | 62/71 [00:07<00:01,  8.39files/s]Downloading data:  90%|█████████ | 64/71 [00:07<00:00,  9.13files/s]Downloading data:  93%|█████████▎| 66/71 [00:07<00:00,  7.96files/s]Downloading data:  94%|█████████▍| 67/71 [00:08<00:01,  3.17files/s]Downloading data:  97%|█████████▋| 69/71 [00:09<00:00,  3.98files/s]Downloading data: 100%|██████████| 71/71 [00:09<00:00,  5.06files/s]Downloading data: 100%|██████████| 71/71 [00:09<00:00,  7.52files/s]
+Generating train split: 0 examples [00:00, ? examples/s]Generating train split: 100 examples [00:06, 16.39 examples/s]Generating train split: 100 examples [00:17, 16.39 examples/s]Generating train split: 212 examples [00:33,  5.73 examples/s]Generating train split: 224 examples [00:37,  5.39 examples/s]Generating train split: 324 examples [01:02,  4.53 examples/s]Generating train split: 436 examples [01:25,  4.71 examples/s]Generating train split: 548 examples [01:57,  4.14 examples/s]Generating train split: 560 examples [02:01,  4.08 examples/s]Generating train split: 660 examples [02:38,  3.37 examples/s]Generating train split: 772 examples [03:10,  3.41 examples/s]Generating train split: 784 examples [03:45,  2.27 examples/s]Generating train split: 784 examples [03:45,  3.47 examples/s]
+Traceback (most recent call last):
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/datasets/builder.py", line 1871, in _prepare_split_single
+    writer.write_table(table)
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/datasets/arrow_writer.py", line 628, in write_table
+    self.pa_writer.write_table(pa_table, writer_batch_size)
+  File "pyarrow/ipc.pxi", line 529, in pyarrow.lib._CRecordBatchWriter.write_table
+  File "pyarrow/error.pxi", line 89, in pyarrow.lib.check_status
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/fsspec/implementations/local.py", line 431, in write
+    return self.f.write(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 122] Disk quota exceeded
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/datasets/builder.py", line 1887, in _prepare_split_single
+    num_examples, num_bytes = writer.finalize()
+                              ^^^^^^^^^^^^^^^^^
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/datasets/arrow_writer.py", line 645, in finalize
+    self.stream.close()
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/fsspec/implementations/local.py", line 449, in close
+    return self.f.close()
+           ^^^^^^^^^^^^^^
+OSError: [Errno 122] Disk quota exceeded
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home1/akarande/finetuned-music2latent/music2latent/train.py", line 791, in <module>
+    main()
+  File "/home1/akarande/finetuned-music2latent/music2latent/train.py", line 775, in main
+    trainer = Trainer()
+              ^^^^^^^^^
+  File "/home1/akarande/finetuned-music2latent/music2latent/train.py", line 64, in __init__
+    train_dataset, val_dataset = get_train_val_datasets()
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home1/akarande/finetuned-music2latent/music2latent/data.py", line 88, in get_train_val_datasets
+    full_dataset = load_dataset(hparams.hf_dataset_name, split=hparams.hf_dataset_split)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/datasets/load.py", line 2084, in load_dataset
+    builder_instance.download_and_prepare(
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/datasets/builder.py", line 925, in download_and_prepare
+    self._download_and_prepare(
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/datasets/builder.py", line 1001, in _download_and_prepare
+    self._prepare_split(split_generator, **prepare_split_kwargs)
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/datasets/builder.py", line 1742, in _prepare_split
+    for job_id, done, content in self._prepare_split_single(
+  File "/home1/akarande/finetuned-music2latent/env/lib/python3.11/site-packages/datasets/builder.py", line 1898, in _prepare_split_single
+    raise DatasetGenerationError("An error occurred while generating the dataset") from e
+datasets.exceptions.DatasetGenerationError: An error occurred while generating the dataset

@@ -1,6 +1,6 @@
-from .hparams import hparams
-from .utils import *
-from .audio import *
+from hparams import hparams
+from utils import *
+from audio import *
 
 import torch
 import torch.nn as nn

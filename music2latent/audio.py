@@ -5,7 +5,7 @@ import torchaudio
 import librosa
 import matplotlib.pyplot as plt
 
-from .hparams import hparams
+from hparams import hparams
 
 
 def wv2spec(wv, hop_size=256, fac=4):
