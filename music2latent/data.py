@@ -82,17 +82,28 @@ def get_train_val_datasets():
     Loads the Hugging Face dataset specified in hparams and splits it into 
     training and validation sets based on hparams.validation_split_ratio.
     Returns two ContrastiveAudioDataset instances.
+    Uses streaming mode to avoid downloading the entire dataset.
     """
     print(f"Loading dataset: {hparams.hf_dataset_name}, split: {hparams.hf_dataset_split}")
-    # Load the full dataset
-    full_dataset = load_dataset(hparams.hf_dataset_name, split=hparams.hf_dataset_split)
+    # Load the full dataset in streaming mode
+    full_dataset = load_dataset(
+        hparams.hf_dataset_name, 
+        split=hparams.hf_dataset_split,
+        streaming=True  # Enable streaming mode
+    )
     
-    # Split the dataset
-    # Ensure reproducibility with a fixed seed if desired
-    split_datasets = full_dataset.train_test_split(
+    # Convert streaming dataset to a regular dataset for splitting
+    # We'll take a subset of the data to avoid memory issues
+    # You can adjust these numbers based on your needs
+    subset_size = 1000  # Number of examples to load for splitting
+    subset = list(full_dataset.take(subset_size))
+    subset_dataset = HFDataset.from_list(subset)
+    
+    # Split the subset dataset
+    split_datasets = subset_dataset.train_test_split(
         test_size=hparams.validation_split_ratio,
         shuffle=True, 
-        seed=hparams.seed # Use the global seed for reproducibility
+        seed=hparams.seed
     )
     
     train_hf_dataset = split_datasets['train']
@@ -102,13 +113,8 @@ def get_train_val_datasets():
     print(f"Validation dataset size: {len(val_hf_dataset)}")
     
     # Create ContrastiveAudioDataset for train and validation
-    # We assume ContrastiveAudioDataset handles the audio processing and augmentation
     train_dataset = ContrastiveAudioDataset(train_hf_dataset, sample_rate=hparams.sample_rate)
-    val_dataset = ContrastiveAudioDataset(val_hf_dataset, sample_rate=hparams.sample_rate) # Note: usually no heavy augmentation for validation
-    
-    # Optional: Modify ContrastiveAudioDataset or create a simpler version for validation 
-    # if you don't want augmentations during validation.
-    # For now, we use the same class but the augmentations might not be ideal for eval.
+    val_dataset = ContrastiveAudioDataset(val_hf_dataset, sample_rate=hparams.sample_rate)
     
     return train_dataset, val_dataset
 
@@ -139,21 +145,22 @@ def get_dataloader(dataset, batch_size_per_gpu, shuffle=True):
 
 def get_test_dataset():
     # Check if using Hugging Face dataset for testing
-    # This might need adjustment depending on how testing/evaluation is done.
-    # For now, assume it uses a separate test path or a specific HF split.
     if 'datasets/' in hparams.data_path_test: 
-        # This part might need review - is data_path_test set correctly?
-        # Does it point to a dataset suitable for testing (e.g., original audio only)?
-        # Let's assume for now it loads *some* dataset for testing.
-        test_hf_dataset = load_dataset(hparams.data_path_test.replace('datasets/', ''), split='test') # Example split
+        # Load test dataset in streaming mode
+        test_hf_dataset = load_dataset(
+            hparams.data_path_test.replace('datasets/', ''), 
+            split='test',
+            streaming=True  # Enable streaming mode
+        )
         
-        # We need a simple dataset for testing, not necessarily contrastive.
-        # Let's create a simple wrapper if needed, or adapt TestAudioDataset.
-        # For simplicity, maybe reuse TestAudioDataset logic but adapted for HF.
-        # This part requires clarification on the *exact* format needed for testing.
-        print(f"Warning: HuggingFace test dataset loading needs verification.")
-        # Placeholder: return a basic dataset for now
-        return BasicAudioDataset(test_hf_dataset, hparams.hop, 1, hparams.data_length_test) 
+        # Convert streaming dataset to a regular dataset
+        # Take a subset to avoid memory issues
+        subset_size = 100  # Number of examples to load for testing
+        subset = list(test_hf_dataset.take(subset_size))
+        subset_dataset = HFDataset.from_list(subset)
+        
+        print(f"Warning: Using streaming mode with subset of {subset_size} examples for testing.")
+        return BasicAudioDataset(subset_dataset, hparams.hop, 1, hparams.data_length_test) 
 
     else:
         # Original local file testing

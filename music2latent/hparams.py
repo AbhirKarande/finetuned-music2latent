@@ -20,7 +20,7 @@ class HParams:
     compile_model: bool = True                                                      # compile the model for faster training (will require ~10 minutes of compilation time only on first run)
     mixed_precision: bool = True                                                    # use mixed precision (float16)
     num_workers: int = 16                                                           # number of dataloader workers
-    multi_gpu: bool = False                                                         # use DistributedDataParallel multi-gpu training
+    multi_gpu: bool = True                                                         # use DistributedDataParallel multi-gpu training
     seed: int = 42                                                                  # seed for Pytorch and Numpy
     load_path: Optional[str] = None                                                 # load checkpoint from this path
     load_iter: bool = True                                                          # if False, reset the scheduler and start from iteration 0

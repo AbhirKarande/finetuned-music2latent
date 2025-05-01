@@ -8,13 +8,13 @@
 
 
 # MAIN PARAMETERS
-batch_size = 16                                                             # batch size
-lr = 0.0001                                                                 # learning rate
-total_iters = 800000                                                        # total iterations
-iters_per_epoch = 10000                                                     # number of iterations approximately in every epoch
-compile_model = True                                                        # compile the model for faster training (will require ~10 minutes of compilation time only on first run)
-num_workers = 16                                                            # number of dataloader workers
-multi_gpu = False                                                           # use DistributedDataParallel multi-gpu training, to be used with torchrun
+batch_size = 32                                                             # increased batch size
+lr = 0.0002                                                                 # slightly higher learning rate
+total_iters = 400000                                                        # reduced total iterations
+iters_per_epoch = 5000                                                      # reduced iterations per epoch
+compile_model = True                                                        # keep compilation enabled
+num_workers = 16                                                            # keep current workers
+multi_gpu = True                                                            # enable multi-gpu training
 
 data_paths = [
     "datasets/ryanleeme17/free-music-archive-retrieval"  # Hugging Face dataset path
@@ -83,15 +83,15 @@ fad_background_embeddings = [f'fad_stats/{data_path_test.replace("/", "")}_{fm}.
 
 
 # MODEL
-base_channels = 64                                                          # base channel number for architecture
-layers_list = [2,2,2,2,2]                                                   # number of blocks per each resolution level
-multipliers_list = [1,2,4,4,4]                                              # base channels multipliers for each resolution level
-attention_list = [0,0,1,1,1]                                                # for each resolution, 0 if no attention is performed, 1 if attention is performed
-freq_downsample_list = [1,0,0,0]                                            # for each resolution, 0 if frequency 4x downsampling, 1 if standard frequency 2x and time 2x downsampling
+base_channels = 48                                                          # reduced base channels
+layers_list = [2,2,2,2]                                                    # reduced number of layers
+multipliers_list = [1,2,4,4]                                               # reduced multipliers
+attention_list = [0,0,1,1]                                                 # adjusted attention layers
+freq_downsample_list = [1,0,0]                                             # adjusted downsampling
 
-layers_list_encoder = [1,1,1,1,1]                                           # number of blocks per each resolution level
-attention_list_encoder = [0,0,1,1,1]                                        # for each resolution, 0 if no attention is performed, 1 if attention is performed
-bottleneck_base_channels = 512                                              # base channels to use for block before/after bottleneck
+layers_list_encoder = [1,1,1,1]                                            # reduced encoder layers
+attention_list_encoder = [0,0,1,1]                                         # adjusted encoder attention
+bottleneck_base_channels = 384                                              # reduced bottleneck channels
 num_bottleneck_layers = 4                                                   # number of blocks to use before/after bottleneck
 frequency_scaling = True                                                    # use frequency scaling
 
