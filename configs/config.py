@@ -1,3 +1,12 @@
+# Configuration file for music2latent using Hugging Face FMAR dataset
+
+# Paths to training data
+
+
+# Path to test data (using the same dataset but different split)
+
+
+
 # MAIN PARAMETERS
 batch_size = 16                                                             # batch size
 lr = 0.0001                                                                 # learning rate
@@ -7,9 +16,11 @@ compile_model = True                                                        # co
 num_workers = 16                                                            # number of dataloader workers
 multi_gpu = False                                                           # use DistributedDataParallel multi-gpu training, to be used with torchrun
 
-data_paths = ['/media/datasets/dataset1', '/media/datasets/dataset2']       # list of paths of training datasets (use a single-element list for a single dataset). Audio files will be recursively searched in these paths and in their sub-paths
+data_paths = [
+    "datasets/ryanleeme17/free-music-archive-retrieval"  # Hugging Face dataset path
+]
 data_fractions = None                                                       # list of sampling weights of each dataset (if None, equal sampling weights)
-data_path_test = '/media/datasets/test_dataset'                             # path of samples used for FAD testing (e.g. musiccaps)
+data_path_test = "datasets/ryanleeme17/free-music-archive-retrieval"  # Hugging Face dataset path 
 data_extensions = ['.wav', '.flac']                                         # list of extensions of audio files to search for in the given paths
 
 num_samples_fad = 500                                                       # number of samples that are encoded and decoded for FAD evaluation
