@@ -31,7 +31,7 @@ class HParams:
     use_contrastive: bool = True                                                   # whether to use contrastive learning with audio augmentations
 
     # LSTM PARAMETERS
-    use_lstm: bool = False                                                          # whether to use LSTM in the encoder
+    use_lstm: bool = True                                                          # whether to use LSTM in the encoder
     lstm_hidden_size: int = 256                                                     # hidden size of LSTM
     lstm_num_layers: int = 2                                                        # number of LSTM layers
     lstm_dropout: float = 0.1                                                       # dropout rate for LSTM
