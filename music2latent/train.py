@@ -55,7 +55,18 @@ class Trainer:
         np.random.seed((hparams.seed * misc.get_world_size() + misc.get_rank()) % (1 << 31))
         torch.manual_seed(np.random.randint(1 << 31))
 
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # Set device and dtype
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+            # Force float32 for MPS
+            torch.set_default_dtype(torch.float32)
+            print("Using MPS device with float32")
+        else:
+            self.device = torch.device("cpu")
+            print("Using CPU device")
+
         batch_size_per_gpu = hparams.batch_size // misc.get_world_size()
 
         # --- Load Data --- 
@@ -128,63 +139,53 @@ class Trainer:
         if not hparams.use_contrastive:
             raise ValueError("train_it called but use_contrastive is False")
             
-        # For contrastive learning, batch contains 'original' and 'transformed' samples
-        original = batch["original"].to(self.device, non_blocking=True).float()
-        transformed = batch["transformed"].to(self.device, non_blocking=True).float()
+        # Ensure float32 for MPS compatibility
+        original = batch["original"].to(torch.float32).to(self.device, non_blocking=True)
+        transformed = batch["transformed"].to(torch.float32).to(self.device, non_blocking=True)
         
-        # Combine original and transformed samples for a single encoder pass
-        # Shape: [2 * batch_size, channels, length] (assuming mono for now)
-        # Ensure audio has channel dimension if needed by to_representation_encoder
-        if original.dim() == 2: # Add channel dim if missing [B, L] -> [B, 1, L]
+        if original.dim() == 2:
              original = original.unsqueeze(1)
              transformed = transformed.unsqueeze(1)
              
         inputs = torch.cat([original, transformed], dim=0)
-
-        # Convert raw audio to the representation expected by the encoder
-        # This function might need adjustment based on model specifics
-        # Assuming it returns shape [2B, C_repr, T_repr] or similar
         data_encoder_repr = to_representation_encoder(inputs)
-
-        # Get embeddings from the encoder
-        with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=hparams.mixed_precision):
-            # Use self.model (which is the DDP wrapped or raw encoder) 
-            # Assuming encoder outputs [2B, embed_dim, seq_len]
-            embeddings = self.model(data_encoder_repr) 
-            
-            # Global average pooling over the time dimension to get fixed-size embeddings
-            # Shape: [2B, embed_dim]
-            pooled_embeddings = embeddings.mean(dim=2) 
-            
-            # Calculate contrastive loss
-            contrastive_loss = info_nce_loss(pooled_embeddings, hparams.contrastive_temperature)
-            
-            # Total loss (can add other losses later if needed)
-            loss = contrastive_loss # * hparams.contrastive_loss_weight (already 1.0)
         
-        # --- Backward Pass --- 
+        # Fix tensor dimensions if needed
+        if data_encoder_repr.dim() == 5:
+            # If we get [B, 1, 2, H, W], reshape to [B, 2, H, W]
+            data_encoder_repr = data_encoder_repr.squeeze(1)
+
+        # Only use autocast for CUDA, not for MPS
+        if self.device.type == 'cuda':
+            with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=hparams.mixed_precision):
+                embeddings = self.model(data_encoder_repr)
+                pooled_embeddings = embeddings.mean(dim=2)
+                contrastive_loss = info_nce_loss(pooled_embeddings, hparams.contrastive_temperature)
+                loss = contrastive_loss
+        else:
+            # No autocast for MPS
+            embeddings = self.model(data_encoder_repr)
+            pooled_embeddings = embeddings.mean(dim=2)
+            contrastive_loss = info_nce_loss(pooled_embeddings, hparams.contrastive_temperature)
+            loss = contrastive_loss
+        
         self.optimizer.zero_grad(set_to_none=True)
         self.scaler.scale(loss).backward()
-        self.scaler.unscale_(self.optimizer) # Unscale for gradient clipping
-        
-        # Optional: Gradient Clipping (Uncomment if needed)
-        # torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+        self.scaler.unscale_(self.optimizer)
         
         self.scaler.step(self.optimizer)
         self.scaler.update()
         
-        # Update EMA if enabled
         if hparams.enable_ema:
             self.ema.update()
         
-        return loss.item() # Return scalar loss value
+        return loss.item()
 
-    @torch.no_grad()
     def validate_epoch(self):
         """
         Runs validation on the validation set.
         """
-        self.model.eval() # Set model to evaluation mode
+        self.model.eval()
         total_val_loss = 0.0
         num_val_batches = 0
         
@@ -194,8 +195,9 @@ class Trainer:
             pbar = self.val_dl
             
         for batch in pbar:
-            original = batch["original"].to(self.device, non_blocking=True).float()
-            transformed = batch["transformed"].to(self.device, non_blocking=True).float()
+            # Ensure float32 for MPS compatibility
+            original = batch["original"].to(torch.float32).to(self.device, non_blocking=True)
+            transformed = batch["transformed"].to(torch.float32).to(self.device, non_blocking=True)
             
             if original.dim() == 2:
                  original = original.unsqueeze(1)
@@ -204,25 +206,31 @@ class Trainer:
             inputs = torch.cat([original, transformed], dim=0)
             data_encoder_repr = to_representation_encoder(inputs)
             
-            with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=hparams.mixed_precision):
+            # Fix tensor dimensions if needed
+            if data_encoder_repr.dim() == 5:
+                data_encoder_repr = data_encoder_repr.squeeze(1)
+            
+            # Only use autocast for CUDA, not for MPS
+            if self.device.type == 'cuda':
+                with torch.autocast(device_type='cuda', dtype=torch.float16, enabled=hparams.mixed_precision):
+                    embeddings = self.model(data_encoder_repr)
+                    pooled_embeddings = embeddings.mean(dim=2)
+                    contrastive_loss = info_nce_loss(pooled_embeddings, hparams.contrastive_temperature)
+            else:
                 embeddings = self.model(data_encoder_repr)
                 pooled_embeddings = embeddings.mean(dim=2)
                 contrastive_loss = info_nce_loss(pooled_embeddings, hparams.contrastive_temperature)
             
-            # Note: In distributed mode, gather losses from all GPUs if needed for exact average.
-            # For simplicity here, we average per-GPU losses.
             total_val_loss += contrastive_loss.item()
             num_val_batches += 1
             
             if misc.get_rank() == 0:
                  pbar.set_postfix({'val_loss': contrastive_loss.item()})
 
-        self.model.train() # Set model back to training mode
+        self.model.train()
         
-        # Calculate average validation loss
         avg_val_loss = total_val_loss / num_val_batches if num_val_batches > 0 else 0.0
         
-        # Handle distributed validation loss aggregation (simple averaging for now)
         if hparams.multi_gpu:
             avg_val_loss_tensor = torch.tensor(avg_val_loss, device=self.device)
             torch.distributed.all_reduce(avg_val_loss_tensor, op=torch.distributed.ReduceOp.AVG)

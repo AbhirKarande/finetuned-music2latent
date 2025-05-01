@@ -27,8 +27,15 @@ fma_dataset = load_dataset("ryanleeme17/free-music-archive-retrieval", split="tr
 
 if torch.cuda.is_available():
     torch_device = torch.device("cuda")
+elif torch.backends.mps.is_available():
+    torch_device = torch.device("mps")
+    print("Using MPS device")
+    # Set default tensor type for MPS
+    torch.set_default_dtype(torch.float32)
+    torch.set_default_device(torch_device)
 else:
     torch_device = torch.device("cpu")
+    print("Using CPU device")
 
 
 def get_models(self):

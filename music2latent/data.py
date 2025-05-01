@@ -115,27 +115,48 @@ def get_train_val_datasets():
 def get_dataloader(dataset, batch_size_per_gpu, shuffle=True):
     """
     Generic function to create a DataLoader for a given dataset.
-    Handles distributed training if hparams.multi_gpu is True.
+    Optimized for M2 Max with MPS.
     """
+    # Determine device
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        pin_memory = True
+        persistent_workers = True
+        num_workers = hparams.num_workers
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+        # Force CPU for data loading operations since MPS doesn't support them
+        torch.set_default_device('cpu')
+        pin_memory = False
+        persistent_workers = False
+        num_workers = 0  # Use single process loading for MPS
+    else:
+        device = torch.device("cpu")
+        pin_memory = True
+        persistent_workers = True
+        num_workers = hparams.num_workers
+
     if hparams.multi_gpu:
         sampler = DistributedSampler(dataset, shuffle=shuffle)
-        return DataLoader(
-            dataset,
-            batch_size=batch_size_per_gpu,
-            sampler=sampler,
-            num_workers=hparams.num_workers,
-            pin_memory=True,
-            drop_last=True # Often desired for training
-        )
     else:
-        return DataLoader(
-            dataset,
-            batch_size=batch_size_per_gpu,
-            shuffle=shuffle,
-            num_workers=hparams.num_workers,
-            pin_memory=True,
-            drop_last=True
-        )
+        # Use sequential sampler for MPS to avoid generator device issues
+        if device.type == 'mps':
+            sampler = torch.utils.data.SequentialSampler(dataset)
+        else:
+            sampler = torch.utils.data.RandomSampler(dataset) if shuffle else torch.utils.data.SequentialSampler(dataset)
+
+    # Create DataLoader with optimized settings
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size_per_gpu,
+        sampler=sampler,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        drop_last=True,
+        persistent_workers=persistent_workers,
+    )
+
+    return loader
 
 def get_test_dataset():
     # Check if using Hugging Face dataset for testing
@@ -145,7 +166,8 @@ def get_test_dataset():
         # This part might need review - is data_path_test set correctly?
         # Does it point to a dataset suitable for testing (e.g., original audio only)?
         # Let's assume for now it loads *some* dataset for testing.
-        test_hf_dataset = load_dataset(hparams.data_path_test.replace('datasets/', ''), split='test') # Example split
+        full_dataset = load_dataset(hparams.data_path_test.replace('datasets/', ''), split='train')
+        test_hf_dataset = full_dataset.train_test_split(test_size=0.2)['test']
         
         # We need a simple dataset for testing, not necessarily contrastive.
         # Let's create a simple wrapper if needed, or adapt TestAudioDataset.
@@ -170,7 +192,14 @@ class BasicAudioDataset(Dataset):
         self.hop = hop
         self.wv_length = hop * data_length + (fac-1)*hop
         self.sample_rate = hparams.sample_rate # Assuming target sample rate from hparams
-        print(f"BasicAudioDataset created with {len(hf_dataset)} samples.")
+        # Get device for tensor operations
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        else:
+            self.device = torch.device("cpu")
+        print(f"BasicAudioDataset created with {len(hf_dataset)} samples. Using device: {self.device}")
 
     def __len__(self):
         return len(self.dataset)
@@ -192,12 +221,10 @@ class BasicAudioDataset(Dataset):
                 start = random.randint(0, len(audio_data) - self.wv_length)
                 audio_data = audio_data[start:start + self.wv_length]
 
-            # Convert to torch tensor
-            wv = torch.from_numpy(audio_data).float()
+            # Convert to torch tensor and move to correct device
+            wv = torch.from_numpy(audio_data).float().to(self.device)
             
             # Ensure mono (take first channel if stereo)
-            # Note: this differs from previous logic which averaged or duplicated.
-            # Choose based on what the model expects.
             if wv.dim() > 1 and wv.shape[-1] > 1:
                 wv = wv[..., 0] # Take first channel
             if wv.dim() == 1:
@@ -207,5 +234,5 @@ class BasicAudioDataset(Dataset):
 
         except Exception as e:
             print(f"Error processing sample {idx} in BasicAudioDataset: {e}")
-            # Return zeros on error
-            return torch.zeros(self.wv_length)
+            # Return zeros on error, on the correct device
+            return torch.zeros(self.wv_length, device=self.device)

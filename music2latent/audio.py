@@ -26,7 +26,9 @@ def denormalize_realimag(x):
     return torch.sign(x)*(x.abs()**(1./hparams.alpha_rescale))
 
 def normalize_complex(x):
-    return hparams.beta_rescale*(x.abs()**hparams.alpha_rescale).to(torch.complex64)*torch.exp(1j*torch.angle(x).to(torch.complex64))
+    angle_cpu = torch.angle(x.cpu()).to(x.device)
+    return hparams.beta_rescale * (x.abs()**hparams.alpha_rescale).to(torch.complex64) * torch.exp(1j * angle_cpu.to(torch.complex64))
+    # return hparams.beta_rescale*(x.abs()**hparams.alpha_rescale).to(torch.complex64)*torch.exp(1j*torch.angle(x).to(torch.complex64))
 
 def denormalize_complex(x):
     x = x/hparams.beta_rescale
@@ -49,7 +51,14 @@ def realimag2wv(x, hop_size=256, fac=4):
     return istft(X, fac=fac, hop_size=hop_size, device=X.device).clamp(-1.,1.)
 
 def to_representation_encoder(x):
-    return wv2realimag(x, hparams.hop)
+    """Convert audio to the representation expected by the encoder.
+    Ensures output is 4D: [batch_size, channels, height, width]
+    """
+    x = wv2realimag(x, hparams.hop)
+    # If we get a 5D tensor [B, 1, 2, H, W], reshape to [B, 2, H, W]
+    if x.dim() == 5:
+        x = x.squeeze(1)
+    return x
 
 def to_representation(x):
     return wv2realimag(x, hparams.hop)
@@ -143,7 +152,10 @@ def stft(wv, fac=4, hop_size=256, device='cuda'):
     window = torch.hann_window(fac*hop_size).to(device)
     framed_signals = frame(wv, fac*hop_size, hop_size)
     framed_signals = framed_signals*window
-    return torch.fft.rfft(framed_signals, n=None, dim=- 1, norm=None).permute(0,2,1)
+    # return torch.fft.rfft(framed_signals, n=None, dim=- 1, norm=None).permute(0,2,1)
+    X = torch.fft.rfft(framed_signals, n=None, dim=-1, norm=None)
+    print("DEBUG: X.shape =", X.shape)
+    return X
 
 def normalize(S, mu_rescale=-25., sigma_rescale=75.):
     return (S - mu_rescale) / sigma_rescale

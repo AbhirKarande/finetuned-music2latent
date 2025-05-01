@@ -43,7 +43,12 @@ class FreqGain(nn.Module):
         self.scale = nn.Parameter(torch.ones((1,1,freq_dim,1)))
 
     def forward(self, input):
-        return input*self.scale
+        if self.scale.shape[2] != input.shape[2]:
+            scale = F.interpolate(self.scale, size=input.shape[2:], mode='bilinear', align_corners=False)
+        else:
+            scale = self.scale
+
+        return input * scale
     
 
 class UpsampleConv(nn.Module):
@@ -297,8 +302,8 @@ class Encoder(nn.Module):
         Conv = nn.Conv2d
         self.gain = FreqGain(freq_dim=hparams.hop*2)
 
-        channels = hparams.data_channels
-        self.conv_inp = Conv(channels, input_channels, kernel_size=3, stride=1, padding=1)
+        channels = 32
+        self.conv_inp = None
 
         self.freq_dim = (hparams.hop*2)//(4**hparams.freq_downsample_list.count(1))
         self.freq_dim = self.freq_dim//(2**hparams.freq_downsample_list.count(0))
@@ -321,8 +326,10 @@ class Encoder(nn.Module):
 
         # Add LSTM layer if enabled
         if hparams.use_lstm:
+            # Calculate the correct input size for LSTM
+            lstm_input_size = hparams.base_channels * hparams.multipliers_list[-1] * self.freq_dim
             self.lstm = nn.LSTM(
-                input_size=input_channels * self.freq_dim,
+                input_size=lstm_input_size,
                 hidden_size=hparams.lstm_hidden_size,
                 num_layers=hparams.lstm_num_layers,
                 dropout=hparams.lstm_dropout if hparams.lstm_num_layers > 1 else 0,
@@ -346,9 +353,21 @@ class Encoder(nn.Module):
         self.activation_bottleneck = nn.Tanh()
             
         self.down_layers = nn.ModuleList(down_layers)
+        self.input_channels = hparams.base_channels*hparams.multipliers_list[0]  # Store input_channels as an instance variable
+        self.lstm_input_size = lstm_input_size if hparams.use_lstm else None  # Store LSTM input size
 
 
     def forward(self, x, extract_features=False):
+        if self.conv_inp is None:
+            print("Initializing conv_inp with input channels:", x.shape[1])
+            self.conv_inp = nn.Conv2d(
+                in_channels=x.shape[1],
+                out_channels=self.input_channels,
+                kernel_size=3,
+                stride=1,
+                padding=1
+            ).to(x.device)
+
         x = self.conv_inp(x)
         if hparams.frequency_scaling:
             x = self.gain(x)
@@ -375,6 +394,19 @@ class Encoder(nn.Module):
         if hparams.use_lstm:
             # LSTM expects input of shape (batch, seq_len, input_size)
             x = x.permute(0, 2, 1)  # (batch, seq_len, features)
+            
+            # Ensure the input size matches what the LSTM expects
+            if x.size(-1) != self.lstm_input_size:
+                # If the input size doesn't match, pad or truncate as needed
+                if x.size(-1) < self.lstm_input_size:
+                    x = F.pad(x, (0, self.lstm_input_size - x.size(-1)))
+                else:
+                    x = x[..., :self.lstm_input_size]
+            
+            # Move LSTM to the same device as input
+            if self.lstm.weight_hh_l0.device != x.device:
+                self.lstm = self.lstm.to(x.device)
+            
             x, _ = self.lstm(x)  # (batch, seq_len, hidden_size)
             x = x.permute(0, 2, 1)  # (batch, hidden_size, seq_len)
 

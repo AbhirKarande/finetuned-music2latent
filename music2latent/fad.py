@@ -89,7 +89,7 @@ class FrechetAudioDistance:
                 print("[Frechet Audio Distance] Using CPU device instead.")
             self.device = torch.device('cpu')
         if self.verbose:
-            print("[Frechet Audio Distance] Using device: {}".format(self.device))
+            print("[Frechet Audio Distance] Using device:", self.device)
         self.audio_load_worker = audio_load_worker
         self.enable_fusion = enable_fusion
         if ckpt_dir is not None:
