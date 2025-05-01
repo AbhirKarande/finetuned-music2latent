@@ -13,5 +13,5 @@ module load python
 
 source /home1/akarande/finetuned-music2latent/env/bin/activate
 cd /home1/akarande/finetuned-music2latent/music2latent
-export PYTHONPATH=$PYTHONPATH:$(pwd)
+pip install -r requirements.txt
 python3 train.py
