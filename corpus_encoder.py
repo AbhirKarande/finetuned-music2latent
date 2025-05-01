@@ -32,10 +32,16 @@ else:
 
 
 def get_models(self):
-    gen = UNet().to(self.device)
-    checkpoint = torch.load(self.load_path_inference, map_location=self.device, weights_only=False)
-    gen.load_state_dict(checkpoint['gen_state_dict'], strict=False)
-    self.gen = gen
+    # A CHECKPOITN DIRECTORY WILL BE CREATED AFTER TRAINING, 
+    # SO YOU NEED TO LOAD THE CHECKPOINT FROM THAT DIRECTORY
+    checkpoint = torch.load('path/to/your/finetuned/checkpoint.pt', map_location=self.device)
+    
+    # Load the encoder state dict
+    self.encoder.load_state_dict(checkpoint['encoder_state_dict'], strict=False)
+    
+    # If you also need the generator
+    if hasattr(self, 'gen'):
+        self.gen.load_state_dict(checkpoint['gen_state_dict'], strict=False)
 
 EncoderDecoder.get_models = get_models
 
